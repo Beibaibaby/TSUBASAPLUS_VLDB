@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import math
 
 size_bw = int(20) 
-ts=np.load('/u/yxu103/TSUBASAPLUS/datasets/data_noea.npy')#change to your local path
+ts=np.load('./datasets/data_noea.npy')#change to your local path
 size_sliding=50
 
 
