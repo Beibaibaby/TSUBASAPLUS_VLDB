@@ -65,18 +65,17 @@ def test_validity_check_time(ts_matrix, size_bw, size_sliding):
     #print(ts_splited.shape)
     num_bs=ts_splited.shape[1]#how many basic windows in one ts
     mean_list = np.mean(ts_splited,axis=-1)
-    list_std_of_mean=[]
     crosstimes_std_mean=[]
     sliding_window_list=create_sliding_window_list(size_sliding,num_bs)
     #for i in range(mean_list.shape[0]):
-    for i in range(5):
+    for i in range(mean_list.shape[0]):
+        list_std_of_mean=[]
         for sliding_window in sliding_window_list:
         #print(sliding_window)
             std_of_this_sliding=np.std(mean_list[i][sliding_window[0]:sliding_window[1]])
             #list_of_l2.append(np.max(np.std(mean_list[i][sliding_window[0]:sliding_window[1]]))-np.min(np.std(mean_list[i][sliding_window[0]:sliding_window[1]])))
-            list_std_of_mean.append(std_of_this_sliding)
-        list_std_of_mean.append(np.mean(np.asarray(std_of_this_sliding)))
-    crosstimes_std_mean.append(np.asarray(list_std_of_mean))
+            list_std_of_mean.append(np.mean(np.asarray(std_of_this_sliding)))
+        crosstimes_std_mean.append(np.asarray(list_std_of_mean))
     return np.asarray(list_std_of_mean), np.asarray(crosstimes_std_mean)
 
 def corr_pair(x,y):
