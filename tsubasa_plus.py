@@ -59,27 +59,25 @@ def test_validity(ts_matrix, size_bw,size_sliding):
     return np.asarray(list_std_of_mean), np.asarray(list_of_l2)
 
 
-def test_validity_check_time(ts_matrix, size_bw,size_sliding):
+def test_validity_check_time(ts_matrix, size_bw, size_sliding):
     ts_splited = create_basic_window_matrix(ts_matrix,size_bw)
     #Create the dataset you will work on
     #print(ts_splited.shape)
     num_bs=ts_splited.shape[1]#how many basic windows in one ts
     mean_list = np.mean(ts_splited,axis=-1)
     list_std_of_mean=[]
-    list_of_l2=[]
+    crosstimes_std_mean=[]
     sliding_window_list=create_sliding_window_list(size_sliding,num_bs)
-    for i in range(mean_list.shape[0]):
-
+    #for i in range(mean_list.shape[0]):
+    for i in range(5):
         for sliding_window in sliding_window_list:
         #print(sliding_window)
-        
-            std_of_this_sliding=np.std(mean_list[i][sliding_window[0]:sliding_window[1]])/np.mean(mean_list[i][sliding_window[0]:sliding_window[1]])
-            list_of_l2.append(np.max(np.std(mean_list[i][sliding_window[0]:sliding_window[1]]))-np.min(np.std(mean_list[i][sliding_window[0]:sliding_window[1]])))
-        #range_of_sl = np.max(sliding_window)-np.max(sliding_window)
-        #max_mean_range = np.max(abs([a-b for a,b in zip(mean_list[0], [sliding_window[0],sliding_window[1]])]))
+            std_of_this_sliding=np.std(mean_list[i][sliding_window[0]:sliding_window[1]])
+            #list_of_l2.append(np.max(np.std(mean_list[i][sliding_window[0]:sliding_window[1]]))-np.min(np.std(mean_list[i][sliding_window[0]:sliding_window[1]])))
             list_std_of_mean.append(std_of_this_sliding)
-
-    return stdlist, list_of_l2
+        list_std_of_mean.append(np.mean(np.asarray(std_of_this_sliding)))
+    crosstimes_std_mean.append(np.asarray(list_std_of_mean))
+    return np.asarray(list_std_of_mean), np.asarray(crosstimes_std_mean)
 
 def corr_pair(x,y):
     if x.shape != y.shape:
