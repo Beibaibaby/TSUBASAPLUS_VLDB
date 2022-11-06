@@ -12,8 +12,7 @@ ts=np.load('./datasets/data_noea.npy')#change to your local path
 size_sliding=50
 
 
-thre=0.5
-mean_list, max_min_list =tsu.test_validity(ts,size_bw,size_sliding)
+mean_list, crosstime_stdmean =tsu.test_validity_check_time(ts,size_bw,size_sliding)
 #mean_list=mean_list[ (mean_list >= 50) & (mean_list <= -100) ]
 print(mean_list)
 #max_min_list=max_min_list[(max_min_list >= 50) & (max_min_list <= -100)]
