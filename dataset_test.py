@@ -24,7 +24,7 @@ plt.ylabel("Count")
 plt.savefig('plot_Hist of Mean of Std coeff of (each time series)_noea')
 plt.show()
 
-plt.plot(ts.shape[1], np.size(crosstime_stdmean))
+plt.plot(np.arange(0, crosstime_stdmean.shape[1]), crosstime_stdmean.mean(axis=0))
 plt.title("Cross-time-series of Mean of Std-NOEA")
 plt.xlabel("time")
 plt.ylabel("Mean of std of cross time series")
