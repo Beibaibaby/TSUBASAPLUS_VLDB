@@ -210,10 +210,16 @@ def binary_search(x, y, t, size_sliding,thre):
     k = 0
     while k <= size_sliding:
         k = size_sliding / 2
-        if corr_ini[t] > thre:   # < √jump
-            return k
+        if a >= thre:   # < √jump
+            return 0
         else:
-            k = k/2 + t
+            corr_ini += (1+k)/size_sliding
+            b = corr_ini
+            if b >= thre:
+                return k
+            else:
+                k = k/2
+                corr_ini += (1+k)/size_sliding
     return k
 
 
