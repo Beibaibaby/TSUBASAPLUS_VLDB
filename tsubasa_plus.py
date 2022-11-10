@@ -204,7 +204,17 @@ def jumping_high_low(x, y, t, size_sliding,thre):
         print('jumped step', str(size_sliding))
         return size_sliding
 
-
+def binary_search(x, y, t, size_sliding,thre):
+    corr_ini = corr_pair_query(x, y, t, size_sliding)
+    a, c = corr_pair_complete(x[t:t + size_sliding], y[t:t + size_sliding])
+    k = 0
+    while k <= size_sliding:
+        k = size_sliding / 2
+        if corr_ini[t] > thre:   # < √jump
+            return k
+        else:
+            k = k/2 + t
+    return k
 
 
 
