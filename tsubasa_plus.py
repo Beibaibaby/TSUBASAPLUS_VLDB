@@ -204,22 +204,26 @@ def jumping_high_low(x, y, t, size_sliding,thre):
         print('jumped step', str(size_sliding))
         return size_sliding
 
-def binary_search(x, y, t, size_sliding,thre):
-    corr_ini = corr_pair_query(x, y, t, size_sliding)
-    a, c = corr_pair_complete(x[t:t + size_sliding], y[t:t + size_sliding])
-    k = 0
-    while k <= size_sliding:
-        k = size_sliding / 2
-        if a >= thre:   # < √jump
-            return 0
-        else:
-            corr_ini += (1+k)/size_sliding
-            b = corr_ini
-            if b >= thre:
-                return k
-            else:
-                k = k/2
-                corr_ini += (1+k)/size_sliding
+def binarySearch( low, high,c,corr_ini,thre,size_sliding):
+    if low > high:
+        print('jumped step',str(size_sliding))
+        return size_sliding
+    else:
+        mid = int((low + high) / 2)
+        corr=(mid-np.sum(c[:mid]))/size_sliding+corr_ini
+        if corr > thre:
+            print('jumped step',str(mid))
+            return mid
+        else:                          
+            return binarySearch( low, mid-1,c,corr_ini,thre,size_sliding)
+
+def jumping_bs_upper(x, y, t, size_sliding,thre):
+    corr_ini=corr_pair_query(x,y,t,size_sliding)
+    a,c = corr_pair_complete(x[t:t+size_sliding], y[t:t+size_sliding])
+    if a>thre:
+        print('jumped step', str(0))
+        return 0
+    k=binarySearch(0,size_sliding,c,corr_ini,thre,size_sliding)
     return k
 
 
@@ -260,7 +264,7 @@ def do_sliding_hl(ts,size_bw,size_sliding,thre):
     time_len=basic_window_matrix.shape[1]-size_sliding+1
     correlation_matrix=np.zeros((basic_window_matrix.shape[1]-size_sliding+1,basic_window_matrix.shape[0],basic_window_matrix.shape[0]))
     for i in range(basic_window_matrix.shape[0]):
-        with open('/u/yxu103/TSUBASAPLUS/logs/compute_hl_fin.txt', 'a') as f:
+        with open('/u/yxu103/TSUBASAPLUS/logs/compute_hl_fin.txt', 'w') as f:
              f.write(str(i/basic_window_matrix.shape[0]))
         for j in range(basic_window_matrix.shape[0]):
             if i!=j:
@@ -285,6 +289,40 @@ def do_sliding_hl(ts,size_bw,size_sliding,thre):
 
 
     return correlation_matrix
+
+
+def do_sliding_bs_upper(ts,size_bw,size_sliding,thre):
+    basic_window_matrix = create_basic_window_matrix(ts, size_bw)
+    time_len=basic_window_matrix.shape[1]-size_sliding+1
+    correlation_matrix=np.zeros((basic_window_matrix.shape[1]-size_sliding+1,basic_window_matrix.shape[0],basic_window_matrix.shape[0]))
+    for i in range(basic_window_matrix.shape[0]):
+        for j in range(basic_window_matrix.shape[0]):
+              if i!=j:
+                  t = 0
+                  x = basic_window_matrix[i]
+                  y = basic_window_matrix[j]
+                  while t <= time_len - 1:
+                      jumped_step = jumping_bs_upper(x, y, t, size_sliding,thre)
+                      if jumped_step == 0:
+                          corr = corr_pair_query(x, y, t, size_sliding)
+                          correlation_matrix[t, i, j] = corr
+                          t = t + 1
+                      else:
+                          t = t + jumped_step
+                          if t <= time_len - 1:
+                              corr = corr_pair_query(x, y, t, size_sliding)
+                              correlation_matrix[t, i, j] = corr
+                          else:
+                              break
+              else:
+                  correlation_matrix[:, i, j]=1
+
+
+    return correlation_matrix
+
+
+
+
 
 def do_sliding_gt(ts,size_bw,size_sliding):
     basic_window_matrix = create_basic_window_matrix(ts, size_bw)
