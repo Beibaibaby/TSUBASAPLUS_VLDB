@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import math
 
 size_bw = int(20) 
-ts=np.load('./datasets/data_noea.npy')#change to your local path
+ts=np.load('/localdisk2/draco/tsubasa/fin_dataset.npy')#change to your local path
 #ts=ts[5:10,:]
 size_sliding=50
 
@@ -20,17 +20,17 @@ print(crosstime_stdmean)
 #max_min_list=max_min_list[(max_min_list >= 50) & (max_min_list <= -100)]
 #p#rint(mean_list)
 plt.hist(mean_list,bins=100)
-plt.title("Hist of Mean of Std coeff of (each time series)-NOEA")
+plt.title("Hist of Mean of Std coeff of (each time series)-FIN")
 plt.xlabel("Mean of Std coeff of (each time series)")
 plt.ylabel("Count")
-plt.savefig('plot_Hist of Mean of Std coeff of (each time series)_noea')
+plt.savefig('plot_Hist of Mean of Std coeff of (each time series)_FIN')
 plt.show()
 
 plt.plot(np.arange(0, crosstime_stdmean.shape[1]), crosstime_stdmean.mean(axis=0))
-plt.title("Cross-time-series of Mean of Std-NOEA")
+plt.title("Cross-time-series of Mean of Std-FIN")
 plt.xlabel("time")
 plt.ylabel("Mean of std of cross time series")
-plt.savefig('Mean of std of cross time series_noea')
+plt.savefig('Mean of std of cross time series_FIN')
 plt.show()
 
 print(np.mean(ts))
