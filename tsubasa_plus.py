@@ -180,6 +180,28 @@ def jumping(x,y,t,size_sliding,thre):
     print('jumped step',str(size_sliding))
     return size_sliding
 
+def isnan(nan):
+    return nan !=nan
+
+def jumping_mean(x,y,t,size_sliding,thre):
+    corr_ini=corr_pair_query(x,y,t,size_sliding)
+    a,c = corr_pair_complete(x[t:t+size_sliding], y[t:t+size_sliding])
+    if isnan(a):
+        a=1
+    if a>thre:
+        print('jumped step', str(0))
+        return 0
+    #print(a)
+    #print(np.mean(c))
+
+    cs=np.mean(c)
+    if isnan(cs) or cs==1:
+        cs=0.99
+    #print(cs)
+    k=int((thre-a)*(size_sliding)/(1-cs))
+    print('jumped step', str(k))
+        
+    return k
 
 def jumping_high_low(x, y, t, size_sliding,thre):
     corr_ini = corr_pair_query(x, y, t, size_sliding)
@@ -255,9 +277,37 @@ def do_sliding(ts,size_bw,size_sliding,thre):
               else:
                   correlation_matrix[:, i, j]=1
 
-
     return correlation_matrix
 
+
+
+def do_sliding_mean(ts,size_bw,size_sliding,thre):
+    basic_window_matrix = create_basic_window_matrix(ts, size_bw)
+    time_len=basic_window_matrix.shape[1]-size_sliding+1
+    correlation_matrix=np.zeros((basic_window_matrix.shape[1]-size_sliding+1,basic_window_matrix.shape[0],basic_window_matrix.shape[0]))
+    for i in range(basic_window_matrix.shape[0]):
+        for j in range(basic_window_matrix.shape[0]):
+              if i!=j:
+                  t = 0
+                  x = basic_window_matrix[i]
+                  y = basic_window_matrix[j]
+                  while t <= time_len - 1:
+                      jumped_step = jumping_mean(x, y, t, size_sliding,thre)
+                      if jumped_step == 0:
+                          corr = corr_pair_query(x, y, t, size_sliding)
+                          correlation_matrix[t, i, j] = corr
+                          t = t + 1
+                      else:
+                          t = t + jumped_step
+                          if t <= time_len - 1:
+                              corr = corr_pair_query(x, y, t, size_sliding)
+                              correlation_matrix[t, i, j] = corr
+                          else:
+                              break
+              else:
+                  correlation_matrix[:, i, j]=1
+
+    return correlation_matrix
 
 def do_sliding_hl(ts,size_bw,size_sliding,thre):
     basic_window_matrix = create_basic_window_matrix(ts, size_bw)

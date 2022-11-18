@@ -7,7 +7,7 @@ import tsubasa_plus as tsu
 ##hyper hyperparameter
 size_bw = int(20) #size of basic window
 ts=np.load('./datasets/data_noea.npy')#change to your local path
-ts=ts[:50,:]
+ts=ts[20:50,:]
 size_sliding=50
 
 
@@ -20,13 +20,12 @@ import time
 basic_window_matrix=tsu.create_basic_window_matrix(ts,size_bw)
 
 start_time = time.time()
-sample_result=tsu.do_sliding_bs_upper(ts,size_bw,size_sliding,thre)
+sample_result=tsu.do_sliding_mean(ts,size_bw,size_sliding,thre)
 print("--- %s seconds bs---" % (str(time.time() - start_time)))
-with open('./logs/time_bs.txt', 'a') as f:
+with open('./logs/time_mean.txt', 'a') as f:
     f.write((str(time.time() - start_time)))
-print(sample_result)          
-
-np.save('noea_result_sliding_bs_='+str(size_sliding)+'_basic='+str(size_bw),sample_result)
+print(sample_result)       
+np.save('noea_result_sliding_mean_='+str(size_sliding)+'_basic='+str(size_bw),sample_result)
 
 
 start_time = time.time()
