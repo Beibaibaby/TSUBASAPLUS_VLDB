@@ -154,7 +154,98 @@ def jumping(x,y,t,size_sliding):
     print('jumped step',str(size_sliding))
     return size_sliding
 
+def re_pair_para(x,y):
+    if x.shape != y.shape:
+        raise Exception("Error, the time seris for correlation computation are in different shape")
+    list=[]
+    sigma_list_x = np.zeros(x.shape[0])
+    delta_list_x=np.zeros(x.shape[0])
+    sigma_list_y = np.zeros(x.shape[0])
+    delta_list_y=np.zeros(x.shape[0])
+    mean_x=np.mean(x)
+    for i in range(x.shape[0]):
+        sigma_list_x[i]=np.std(x[i])
+        delta_list_x[i]=np.mean(x[i])-mean_x
 
+    mean_y=np.mean(y)
+    for i in range(y.shape[0]):
+        sigma_list_y[i]=np.std(y[i])
+        delta_list_y[i]=np.mean(y[i])-mean_y
+
+    for i in range(x.shape[0]):
+        #print(x[i])
+        corr=np.corrcoef(x[i],y[i])
+        #print(corr)
+        list.append(corr[0,1])
+
+    cor_list=np.asarray(list)
+    denumerator_1=0
+    denumerator_2=0
+    for i in range(x.shape[0]):
+        #print(sigma_list_x[i])
+        #numerator += (x[i].size *(sigma_list_x[i]*sigma_list_y[i]*cor_list[0] + delta_list_x[i]*delta_list_y[i]))
+        numerator_f = x[i].size *sigma_list_x[i]*sigma_list_y[i]
+        numerator_e = sigma_list_x[i+1]*sigma_list_y[i+1]*cor_list[i+1] - sigma_list_x[i-1]*sigma_list_y[i-1]*cor_list[i-1]
+        numerator_c = x[i].size *sigma_list_x[i]*sigma_list_y[i]*cor_list[i] + sigma_list_x[i+1]*sigma_list_y[i+1]*cor_list[i+1] - sigma_list_x[i-1]*sigma_list_y[i-1]*cor_list[i-1]
+        denumerator_1 += x[i].size * sigma_list_x[i]**2 - sigma_list_x[i-1]**2 + sigma_list_x[i+1]**2
+        denumerator_2 += y[i].size * sigma_list_y[i]**2 - sigma_list_y[i-1]**2 + sigma_list_y[i+1]**2
+
+    denumerator_1=math.sqrt(denumerator_1)
+    denumerator_2 =math.sqrt(denumerator_2)
+    print(numerator_f, numerator_c, numerator_e)
+    return np.asarray(numerator_c/(denumerator_1*denumerator_2)), np.asarray(numerator_e/(denumerator_1*denumerator_2)), np.asarray(numerator_f/(denumerator_1*denumerator_2)), cor_list
+
+
+def jumping_re(x,y,t,size_sliding):
+    corr_ini=corr_pair_query(x,y,t,size_sliding)###
+    c,e,f, cl = re_pair_para(x[t:t+size_sliding], y[t:t+size_sliding])
+    if c>thre:
+        print('jumped step', str(0))
+        #print(a)
+        #print(t)
+        return 0
+
+    for i in range(size_sliding):
+        #corr_ini+= (1 - cl[i])/size_sliding
+        corr_ini+=f*c + (e**i * f**(1-i))
+        if corr_ini>thre:
+             print('jumped step',str(i))
+             return i
+    print('jumped step',str(size_sliding))
+    return size_sliding
+
+list=[]
+basic_window_matrix=create_basic_window_matrix(result,size_bw)
+
+def do_sliding_re(result,size_bw,size_sliding):
+    basic_window_matrix = create_basic_window_matrix(result, size_bw)
+    time_len=basic_window_matrix.shape[1]-size_sliding+1
+    correlation_matrix=np.zeros((basic_window_matrix.shape[1]-size_sliding+1,basic_window_matrix.shape[0],basic_window_matrix.shape[0]))
+    for i in range(basic_window_matrix.shape[0]):
+        for j in range(basic_window_matrix.shape[0]):
+              if i!=j:
+                  t = 0
+                  x = basic_window_matrix[i]
+                  y = basic_window_matrix[j]
+                  while t <= time_len - 1:
+                      jumped_step = jumping_re(x, y, t, size_sliding)
+                      if jumped_step == 0:
+                          corr = corr_pair_query(x, y, t, size_sliding)
+                          correlation_matrix[t, i, j] = corr
+                          t = t + 1
+                      else:
+                          t = t + jumped_step
+                          if t <= time_len - 1:
+                              corr = corr_pair_query(x, y, t, size_sliding)
+                              correlation_matrix[t, i, j] = corr
+                          else:
+                              break
+              else:
+                  correlation_matrix[:, i, j]=1
+    return correlation_matrix
+fd_result_re=do_sliding_re(result[100:105],size_bw,size_sliding)
+np.save('fd_result_re',fd_result_re)
+print(fd_result_re)
 
 list=[]
 basic_window_matrix=create_basic_window_matrix(result,size_bw)
