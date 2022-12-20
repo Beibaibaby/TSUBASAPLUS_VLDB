@@ -153,13 +153,137 @@ def corr_pair_complete(x,y):
 
     denumerator_1=math.sqrt(denumerator_1)
     denumerator_2 =math.sqrt(denumerator_2)
+    
 
     return np.asarray(numerator/(denumerator_1*denumerator_2)), cor_list
 
 
 
+
+
+def corr_pair_complete_generic(x,y):
+    if x.shape != y.shape:
+        raise Exception("Error, the time seris for correlation computation are in different shape")
+    list=[]
+    sigma_list_x = np.zeros(x.shape[0])
+    delta_list_x=np.zeros(x.shape[0])
+    sigma_list_y = np.zeros(x.shape[0])
+    delta_list_y=np.zeros(x.shape[0])
+    mean_x=np.mean(x)
+    for i in range(x.shape[0]):
+        sigma_list_x[i]=np.std(x[i])
+        delta_list_x[i]=np.mean(x[i])-mean_x
+
+    mean_y=np.mean(y)
+    for i in range(y.shape[0]):
+        sigma_list_y[i]=np.std(y[i])
+        delta_list_y[i]=np.mean(y[i])-mean_y
+
+    for i in range(x.shape[0]):
+        #print(x[i])
+        corr=np.corrcoef(x[i],y[i])
+        #print(corr)
+        list.append(corr[0,1])
+
+    cor_list=np.asarray(list)
+    numerator=0
+    denumerator_1=0
+    denumerator_2=0
+    for i in range(x.shape[0]):
+        #print(sigma_list_x[i])
+        numerator += (x[i].size *(sigma_list_x[i]*sigma_list_y[i]*cor_list[0] + delta_list_x[i]*delta_list_y[i]))
+        denumerator_1 += x[i].size * (sigma_list_x[i]**2 + delta_list_x[i]**2)
+        denumerator_2 += y[i].size * (sigma_list_y[i]**2 + delta_list_y[i]**2)
+
+    denumerator_1=math.sqrt(denumerator_1)
+    denumerator_2 =math.sqrt(denumerator_2)
+    
+
+    return np.asarray(numerator/(denumerator_1*denumerator_2)), cor_list, sigma_list_x, sigma_list_y, delta_list_x, delta_list_y 
+
+def corr_pair_complete_two_phrase(x,y):
+    if x.shape != y.shape:
+        raise Exception("Error, the time seris for correlation computation are in different shape")
+    list=[]
+    sigma_list_x = np.zeros(x.shape[0])
+    delta_list_x=np.zeros(x.shape[0])
+    sigma_list_y = np.zeros(x.shape[0])
+    delta_list_y=np.zeros(x.shape[0])
+    mean_x=np.mean(x)
+    for i in range(x.shape[0]):
+        sigma_list_x[i]=np.std(x[i])
+        delta_list_x[i]=np.mean(x[i])-mean_x
+
+    mean_y=np.mean(y)
+    for i in range(y.shape[0]):
+        sigma_list_y[i]=np.std(y[i])
+        delta_list_y[i]=np.mean(y[i])-mean_y
+
+    for i in range(x.shape[0]):
+        #print(x[i])
+        corr=np.corrcoef(x[i],y[i])
+        #print(corr)
+        list.append(corr[0,1])
+
+    cor_list=np.asarray(list)
+    numerator=0
+    denumerator_1=0
+    denumerator_2=0
+    for i in range(x.shape[0]):
+        #print(sigma_list_x[i])
+        numerator += (x[i].size *(sigma_list_x[i]*sigma_list_y[i]*cor_list[0] + delta_list_x[i]*delta_list_y[i]))
+        denumerator_1 += x[i].size * (sigma_list_x[i]**2 + delta_list_x[i]**2)
+        denumerator_2 += y[i].size * (sigma_list_y[i]**2 + delta_list_y[i]**2)
+
+    denumerator_1=math.sqrt(denumerator_1)
+    denumerator_2 =math.sqrt(denumerator_2)
+    
+
+    return np.asarray(numerator/(denumerator_1*denumerator_2)), cor_list, sigma_list_x, sigma_list_y, delta_list_x, delta_list_y 
+
+
+
+
 def corr_pair_query(x,y,starting,len_sliding):
     return corr_pair(x[starting:starting+len_sliding], y[starting:starting+len_sliding])
+
+
+
+def jumping_generic(x,y,t,size_sliding,thre,size_bw):
+    corr_ini=corr_pair_query(x,y,t,size_sliding)
+    a,c,sigma_list_x, sigma_list_y, delta_list_x, delta_list_y  = corr_pair_complete_generic(x[t:t+size_sliding], y[t:t+size_sliding])
+    min_sigma_x=np.amin(sigma_list_x)
+    min_sigma_y=np.amin(sigma_list_y)
+    min_delta_x=np.amin(delta_list_x)
+    min_delta_y=np.amin(delta_list_y)
+    max_sigma_x=np.amax(sigma_list_x)
+    max_sigma_y=np.amax(sigma_list_y)
+    max_delta_x=np.amax(delta_list_x)
+    max_delta_y=np.amax(delta_list_y)
+    T=np.size(sigma_list_y)*size_bw
+    max_alpha_y=(max_delta_y-min_delta_y)/np.size(sigma_list_y)
+    max_alpha_x=(max_delta_x-min_delta_x)/np.size(sigma_list_x)
+    
+    if a>thre:
+        print('jumped step', str(0))
+        return 0
+
+    for i in range(size_sliding):
+        numerator=T*max_sigma_x*max_sigma_y*corr_ini+size_bw*(c[i]*max_sigma_x*max_sigma_y+max_delta_x*max_delta_y)-size_bw*(-1*max_sigma_x*max_sigma_y-min_delta_x*min_delta_y)-T*max_alpha_x*max_alpha_y
+        denumerator_1 = T*min_sigma_x**2
+        denumerator_2 = T*min_sigma_y**2
+
+        denumerator_1= math.sqrt(denumerator_1)
+        denumerator_2 =math.sqrt(denumerator_2)
+
+        corr_ini=numerator/(denumerator_1*denumerator_2)
+
+        if corr_ini>thre:
+             print('jumped step',str(i))
+             return i
+    print('jumped step',str(size_sliding))
+    return size_sliding
+
 
 
 
@@ -174,6 +298,36 @@ def jumping(x,y,t,size_sliding,thre):
 
     for i in range(size_sliding):
         corr_ini+= (1 - c[i])/size_sliding
+        if corr_ini>thre:
+             print('jumped step',str(i))
+             return i
+    print('jumped step',str(size_sliding))
+    return size_sliding
+
+def jumping_twophrase(x,y,t,size_sliding,thre):
+    corr_ini=corr_pair_query(x,y,t,size_sliding)
+    corr_1, cor_list_1, sigma_list_x_1, sigma_list_y_1, delta_list_x_1, delta_list_y_1  = corr_pair_complete_two_phrase(x[t:t+size_sliding], y[t:t+size_sliding])
+    corr_2, cor_list_2, sigma_list_x_2, sigma_list_y_2, delta_list_x_2, delta_list_y_2 = corr_pair_complete_two_phrase(x[t+size_sliding:t+2*size_sliding], y[t+size_sliding:t+2*size_sliding])
+    corr_minus= np.mean(cor_list_1)
+    sigma_x_minus=np.mean(sigma_list_x_1)
+    sigma_y_minus=np.mean(sigma_list_y_1)
+    corr_plus=np.mean(cor_list_2)
+    sigma_x_plus=np.mean(sigma_list_x_2)
+    sigma_y_plus=np.mean(sigma_list_y_2)
+    
+    if corr_1>thre:
+        print('jumped step', str(0))
+        return 0
+    d1= math.sqrt(size_sliding*sigma_x_minus**2+sigma_x_plus**2)
+    d2= math.sqrt(size_sliding*sigma_y_minus**2+sigma_y_plus**2)
+    E = (size_sliding*sigma_x_minus*sigma_y_minus)/(d1*d2)
+    F= (sigma_x_plus*sigma_y_plus*corr_plus-sigma_x_minus*sigma_y_minus*corr_minus)/(d1*d2)
+    
+    for i in range(size_sliding):
+        sum=0
+        for j in range(i):
+              sum+=F**(i-j)*E**j
+        corr_ini= F**i + sum
         if corr_ini>thre:
              print('jumped step',str(i))
              return i
@@ -278,6 +432,35 @@ def do_sliding(ts,size_bw,size_sliding,thre):
                   correlation_matrix[:, i, j]=1
 
     return correlation_matrix
+
+def do_sliding_generic(ts,size_bw,size_sliding,thre):
+    basic_window_matrix = create_basic_window_matrix(ts, size_bw)
+    time_len=basic_window_matrix.shape[1]-size_sliding+1
+    correlation_matrix=np.zeros((basic_window_matrix.shape[1]-size_sliding+1,basic_window_matrix.shape[0],basic_window_matrix.shape[0]))
+    for i in range(basic_window_matrix.shape[0]):
+        for j in range(basic_window_matrix.shape[0]):
+              if i!=j:
+                  t = 0
+                  x = basic_window_matrix[i]
+                  y = basic_window_matrix[j]
+                  while t <= time_len - 1:
+                      jumped_step = jumping_generic(x, y, t, size_sliding,thre,size_bw)
+                      if jumped_step == 0:
+                          corr = corr_pair_query(x, y, t, size_sliding)
+                          correlation_matrix[t, i, j] = corr
+                          t = t + 1
+                      else:
+                          t = t + jumped_step
+                          if t <= time_len - 1:
+                              corr = corr_pair_query(x, y, t, size_sliding)
+                              correlation_matrix[t, i, j] = corr
+                          else:
+                              break
+              else:
+                  correlation_matrix[:, i, j]=1
+
+    return correlation_matrix
+
 
 
 
@@ -392,4 +575,6 @@ def do_sliding_gt(ts,size_bw,size_sliding):
               else:
                   correlation_matrix[:, i, j]=1
     return correlation_matrix
+
+
 
