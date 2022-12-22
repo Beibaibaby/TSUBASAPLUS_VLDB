@@ -237,9 +237,12 @@ def corr_pair_complete_two_phrase(x,y):
 
     denumerator_1=math.sqrt(denumerator_1)
     denumerator_2 =math.sqrt(denumerator_2)
-    
+    if denumerator_1!=0 and denumerator_2!=0:
+        cc=np.asarray(numerator/(denumerator_1*denumerator_2))
+    else:
+        cc=1
 
-    return np.asarray(numerator/(denumerator_1*denumerator_2)), cor_list, sigma_list_x, sigma_list_y, delta_list_x, delta_list_y 
+    return cc, cor_list, sigma_list_x, sigma_list_y, delta_list_x, delta_list_y 
 
 
 
@@ -432,6 +435,36 @@ def do_sliding(ts,size_bw,size_sliding,thre):
                   correlation_matrix[:, i, j]=1
 
     return correlation_matrix
+
+
+def do_sliding_two_phrase(ts,size_bw,size_sliding,thre):
+    basic_window_matrix = create_basic_window_matrix(ts, size_bw)
+    time_len=basic_window_matrix.shape[1]-size_sliding+1
+    correlation_matrix=np.zeros((basic_window_matrix.shape[1]-size_sliding+1,basic_window_matrix.shape[0],basic_window_matrix.shape[0]))
+    for i in range(basic_window_matrix.shape[0]):
+        for j in range(basic_window_matrix.shape[0]):
+              if i!=j:
+                  t = 0
+                  x = basic_window_matrix[i]
+                  y = basic_window_matrix[j]
+                  while t <= time_len - 1:
+                      jumped_step = jumping_twophrase(x, y, t, size_sliding,thre)
+                      if jumped_step == 0:
+                          corr = corr_pair_query(x, y, t, size_sliding)
+                          correlation_matrix[t, i, j] = corr
+                          t = t + 1
+                      else:
+                          t = t + jumped_step
+                          if t <= time_len - 1:
+                              corr = corr_pair_query(x, y, t, size_sliding)
+                              correlation_matrix[t, i, j] = corr
+                          else:
+                              break
+              else:
+                  correlation_matrix[:, i, j]=1
+
+    return correlation_matrix
+
 
 def do_sliding_generic(ts,size_bw,size_sliding,thre):
     basic_window_matrix = create_basic_window_matrix(ts, size_bw)
