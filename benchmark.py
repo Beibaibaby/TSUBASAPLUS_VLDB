@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import random
 
 # def draft_ts(mu_mean, std_mean, mu_std, std_std, num_bw):
 #     ts=[]
@@ -38,21 +39,38 @@ num_ts = 100 # number of time series
 mu_mean = 20 # random
 mu_std = 1 # random; could be related to std_std
 
-thre_e = 0.5 #customized threshold
+thre_e = 0.7 #customized threshold
+n = 10
 
 
-
-def low_list_gen(num_bw, thr_e, mu_mean, std_mean):
-    D = math.sqrt(1-thr_e)
-    ts = []
-    val_rest = []
-    val_ini = np.random.normal(mu_mean, std_mean, 1)   #initialize one point
-    ts.append(val_ini)
-    for i in range(num_bw):
-        e_dist = math.dist([i],[val_ini])
+def low_list_gen(num_bw, thre_e, mu_mean, std_mean):
+    D = math.sqrt(1-thre_e)
+    ts_l = []
+    val_ini = np.random.normal(mu_mean,std_mean,num_bw)   #initialize a list of number
+    print(val_ini)
+    for i in val_ini:
+        e_dist = math.dist([i],[val_ini[0]])    #Euclidian Distance
         if e_dist < D:
-            val_rest.append(i)
-        ts.append(val_rest)
-    ts = np.asarray(ts)
-    ts = np.fft.ifft(ts)
-    return np.asarray(ts)
+            ts_l.append(i)
+    return np.asarray(ts_l)
+
+def dft_matrix(n):
+    i,j=np.meshgrid(np.arange(n), np.arange(n))
+    cal = np.exp(-2*np.pi*1J/n)
+    arr = np.power(cal, i*j)/n
+    return arr
+
+ts_low=low_list_gen(num_bw, thre_e, mu_mean, std_mean)   #input data with shape of (x, )
+print(ts_low)
+print(np.shape(ts_low))
+
+arr = dft_matrix(np.shape(ts_low)[0])
+dft_of_list = arr.dot(ts_low).dot(arr)
+print(dft_of_list)
+
+
+
+
+
+
+
